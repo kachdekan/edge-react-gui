@@ -4,6 +4,7 @@ import * as React from 'react'
 import { Platform, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native'
 import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated'
 import AntDesignIcon from 'react-native-vector-icons/AntDesign'
+import IonIcon from 'react-native-vector-icons/Ionicons'
 
 import { useCallback, useEffect, useImperativeHandle, useRef, useState } from '../../types/reactHooks.js'
 import { fixSides, mapSides, sidesToMargin } from '../../util/sides.js'
@@ -82,6 +83,7 @@ const OutlinedTextInputComponent = React.forwardRef((props: Props, ref) => {
     autoFocus = !searchIcon,
     blurOnClear = searchIcon,
     maxLength,
+    secureTextEntry,
     ...inputProps
   } = props
   const theme = useTheme()
@@ -90,6 +92,10 @@ const OutlinedTextInputComponent = React.forwardRef((props: Props, ref) => {
   const hasError = error != null
   const hasLabel = label != null
   const hasValue = value !== ''
+
+  // Show/Hide password input:
+  const [hidePassword, setHidePassword] = useState(secureTextEntry ?? false)
+  const handleHidePassword = () => setHidePassword(!hidePassword)
 
   // Imperative methods:
   const inputRef = useRef<TextInput>(null)
@@ -263,9 +269,14 @@ const OutlinedTextInputComponent = React.forwardRef((props: Props, ref) => {
           {charLimitLabel}
         </Animated.Text>
         {!searchIcon ? null : <AntDesignIcon name="search1" style={styles.searchIcon} />}
-        {!clearIcon || !hasValue ? null : (
+        {!clearIcon || secureTextEntry || !hasValue ? null : (
           <TouchableOpacity style={styles.clearTapArea} onPress={() => clear()}>
             <AntDesignIcon name="close" style={styles.clearIcon} />
+          </TouchableOpacity>
+        )}
+        {!secureTextEntry ? null : (
+          <TouchableOpacity style={styles.clearTapArea} onPress={handleHidePassword}>
+            <IonIcon name={hidePassword ? 'eye-off-outline' : 'eye-outline'} style={styles.eyeIcon} />
           </TouchableOpacity>
         )}
         <TextInput
@@ -277,6 +288,7 @@ const OutlinedTextInputComponent = React.forwardRef((props: Props, ref) => {
           style={[styles.textInput, textInputStyle]}
           textAlignVertical="top"
           value={value}
+          secureTextEntry={hidePassword}
           // Callbacks:
           onBlur={handleBlur}
           onChangeText={onChangeText}
@@ -391,6 +403,11 @@ const getStyles = cacheStyles(theme => {
     },
     clearIcon: {
       color: theme.iconDeactivated,
+      fontSize: theme.rem(1),
+      padding: theme.rem(1)
+    },
+    eyeIcon: {
+      color: theme.iconTappable,
       fontSize: theme.rem(1),
       padding: theme.rem(1)
     },
